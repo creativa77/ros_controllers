@@ -44,6 +44,9 @@
 
 #include <diff_drive_controller/diff_drive_controller.h>
 
+#include "tf/tf.h"
+#include "tf/transform_listener.h"  //for tf::getPrefixParam
+
 static double euclideanOfVectors(const urdf::Vector3& vec1, const urdf::Vector3& vec2)
 {
   return std::sqrt(std::pow(vec1.x-vec2.x,2) +
@@ -483,7 +486,8 @@ namespace diff_drive_controller{
 
     // Setup odometry realtime publisher + odom message constant fields
     odom_pub_.reset(new realtime_tools::RealtimePublisher<nav_msgs::Odometry>(controller_nh, "odom", 100));
-    odom_pub_->msg_.header.frame_id = "odom";
+    std::string tf_prefix = tf::getPrefixParam(controller_nh);
+    odom_pub_->msg_.header.frame_id = tf::resolve(tf_prefix, "odom"); // Resolve TF_PREFIX
     odom_pub_->msg_.child_frame_id = base_frame_id_;
     odom_pub_->msg_.pose.pose.position.z = 0;
     odom_pub_->msg_.pose.covariance = boost::assign::list_of
